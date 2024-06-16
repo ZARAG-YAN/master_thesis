@@ -12,6 +12,7 @@ Next to this README you can find the project zipped: thesis_project.zip.
 5. USAGE
 6. NOTES
 
+######
 
 1. **AUTHORS**
 
@@ -32,10 +33,13 @@ The following tools and libraries should be installed before run of the project.
 ***Tools:***
  Open source Proximus-foss: https://sourceforge.net/projects/proximus-foss/
 
-***Libraries***
+***Libraries:***
 OpenSSL
+    -openssl/rsa.h
+    -openssl/pem.h
+    -openssl/err.h
 
-***OS***
+***OS:***
 Linux operating system
 
 
@@ -85,16 +89,16 @@ For Encryption/Decryption using OpenSSL Library.
 `unzip thesis_project.zip`
 
 *Run Proximus*
-<installed_proximus_path>/proximus-foss
+`<installed_proximus_path>/proximus-foss`
 
 Run project from the Proximus by opening *verifiable_chain.xml* XML file from the Proximus tool.
 
 
 The Encryption/Description module uses the following OpenSSL's operations:
-Encrypt data with a public key (encryptWithPublicKey).
-Encrypt data with a private key (encryptWithPrivateKey).
-Decrypt data with a private key (decryptWithPrivateKey).
-Decrypt data with a public key (decryptWithPublicKey).
+- Encrypt data with a public key (encryptWithPublicKey).
+- Encrypt data with a private key (encryptWithPrivateKey).
+- Decrypt data with a private key (decryptWithPrivateKey).
+- Decrypt data with a public key (decryptWithPublicKey).
 
 **Explanation**
 Initialization: Initialize OpenSSL's algorithms and error strings.
@@ -105,14 +109,39 @@ The loadPrivateKey function loads a private key from a PEM-encoded string.
 BIO_new_mem_buf creates a memory BIO for reading the PEM key.
 PEM_read_bio_RSA_PUBKEY and PEM_read_bio_RSAPrivateKey read the keys from the BIO.
 
-Encryption and Decryption:
-Encrypt with Public Key:
-The encryptWithPublicKey function encrypts the plaintext using the public key with RSA_public_encrypt and RSA_PKCS1_OAEP_PADDING for padding.
-Decrypt with Private Key:
-The decryptWithPrivateKey function decrypts the ciphertext using the private key with RSA_private_decrypt and RSA_PKCS1_OAEP_PADDING for padding.
-Encrypt with Private Key:
-The encryptWithPrivateKey function encrypts the plaintext using the private key with RSA_private_encrypt and RSA_PKCS1_PADDING for padding (typically for digital signatures).
-Decrypt with Public Key:
-The decryptWithPublicKey function decrypts the ciphertext using the public key with RSA_public_decrypt and RSA_PKCS1_PADDING for padding (typically for verifying digital signatures).
+*Encryption and Decryption:*
+-Encrypt with Public Key:
+    The encryptWithPublicKey function encrypts the plaintext using the public key with RSA_public_encrypt and RSA_PKCS1_OAEP_PADDING for padding.
+`int encryptWithPublicKey(RSA* rsa, const std::string& plaintext, unsigned char* ciphertext) {
+    int result = RSA_public_encrypt(plaintext.size(), (const unsigned char*)plaintext.c_str(), ciphertext, rsa, RSA_PKCS1_OAEP_PADDING);
+    if (result == -1) handleOpenSSLErrors();
+    return result;
+}`
+-Decrypt with Private Key:
+    The decryptWithPrivateKey function decrypts the ciphertext using the private key with RSA_private_decrypt and RSA_PKCS1_OAEP_PADDING for padding.
+`int decryptWithPrivateKey(RSA* rsa, const unsigned char* ciphertext, int ciphertext_len, unsigned char* plaintext) {
+    int result = RSA_private_decrypt(ciphertext_len, ciphertext, plaintext, rsa, RSA_PKCS1_OAEP_PADDING);
+    if (result == -1) handleOpenSSLErrors();
+    return result;
+}`
+
+-Encrypt with Private Key:
+    The encryptWithPrivateKey function encrypts the plaintext using the private key with RSA_private_encrypt and RSA_PKCS1_PADDING for padding (typically for digital signatures).
+`int encryptWithPrivateKey(RSA* rsa, const std::string& plaintext, unsigned char* ciphertext) {
+    int result = RSA_private_encrypt(plaintext.size(), (const unsigned char*)plaintext.c_str(), ciphertext, rsa, RSA_PKCS1_PADDING);
+    if (result == -1) handleOpenSSLErrors();
+    return result;
+}`
+
+
+-Decrypt with Public Key:
+    The decryptWithPublicKey function decrypts the ciphertext using the public key with RSA_public_decrypt and RSA_PKCS1_PADDING for padding (typically for verifying digital signatures).
+
+`int decryptWithPublicKey(RSA* rsa, const unsigned char* ciphertext, int ciphertext_len, unsigned char* plaintext) {
+    int result = RSA_public_decrypt(ciphertext_len, ciphertext, plaintext, rsa, RSA_PKCS1_PADDING);
+    if (result == -1) handleOpenSSLErrors();
+    return result;
+}`
+
 
 Cleanup: Free the loaded keys and OpenSSL structures to prevent memory leaks.
